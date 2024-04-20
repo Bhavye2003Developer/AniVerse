@@ -1,0 +1,127 @@
+const cheerio = require("cheerio");
+const fs = require("fs");
+
+const GOGOANIME_LINK = "https://gogoanime3.co";
+
+const fetchSite = async (url) => {
+  const response = await fetch(url);
+  const doc = response.text();
+  return doc;
+};
+
+const get_anime_id = ($) =>
+  $(".anime_info_episodes_next").children("#movie_id").attr("value");
+
+const get_anime_list = async (anime = "naruto") => {
+  const res = await fetchSite(
+    `${GOGOANIME_LINK}/search.html?keyword=${encodeURIComponent(
+      anime.toLocaleLowerCase()
+    )}`
+  );
+  const $ = cheerio.load(res);
+
+  const ul = $(".items").children("li");
+
+  const user_searched_anime_list = [];
+  for (const li of ul) {
+    const div = $(li).children("div");
+
+    const anime_name = $(div).children("a").attr("title");
+    const anime_link = $(div).children("a").attr("href");
+    const img_link = $(div).children("a").children("img").attr("src");
+    const relased_date = $(li).children(".released").text().trim();
+
+    user_searched_anime_list.push({
+      anime_name,
+      anime_link,
+      img_link,
+      relased_date,
+    });
+  }
+  return user_searched_anime_list;
+};
+
+// get_anime_list("yamada kun").then((res) => {
+//   console.log(res);
+// });
+
+const get_batched_episodes = async (id, start_ep = 0, end_ep) => {
+  const res = await fetchSite(
+    `https://ajax.gogocdn.net/ajax/load-list-episode?ep_start=${start_ep}&ep_end=${end_ep}&id=${id}`
+  );
+  const $ = cheerio.load(res);
+  const ul = $("#episode_related").children("li");
+  const episode_seq = [];
+  for (const li of ul) {
+    const ep_number = $($(li).children("a")[0]).children(".name").text();
+    episode_seq.push(ep_number.split(" ")[1]);
+  }
+  return episode_seq;
+};
+
+const get_episode_batches = ($) => {
+  const ul = $("#episode_page").children("li");
+  const batches = [];
+  for (const li of ul) {
+    const a = $(li).children("a")[0];
+    const ep_start = $(a).attr("ep_start");
+    const ep_end = $(a).attr("ep_end");
+    batches.push({ ep_start, ep_end });
+  }
+  return batches;
+};
+
+const get_anime_info = async (anime_link) => {
+  const res = await fetchSite(GOGOANIME_LINK + anime_link);
+  const $ = cheerio.load(res);
+
+  const info = {};
+  info["id"] = get_anime_id($);
+  info["name"] = anime_link.split("/")[2];
+  info["episode_batches"] = get_episode_batches($);
+
+  // console.log(info);
+  // get_batched_episodes(
+  //   info.id,
+  //   info.episode_batches[0].ep_start,
+  //   info.episode_batches[0].ep_end
+  // );
+};
+
+// get_anime_info("/category/naruto-shippuuden-movie-1");
+
+const get_episode = (name, episode_num) =>
+  `${GOGOANIME_LINK}/${name}-episode-${episode_num}`;
+
+// console.log(get_episode("naruto-shippuuden-movie-1", 1));
+
+const get_servers = async (episode_link) => {
+  const res = await fetchSite(episode_link);
+  const $ = cheerio.load(res);
+  const servers = [];
+  const div = $(".anime_muti_link").children("ul")[0];
+  const ul = $(div).children("li");
+
+  for (const li of ul) {
+    const a_tag = $(li).children("a")[0];
+    const server_link = $(a_tag).attr("data-video");
+    const server_name = $(a_tag).text();
+    servers.push({
+      server_name: server_name.slice(0, server_name.length - 18).trim(),
+      server_link,
+    });
+  }
+  return servers;
+};
+
+// get_servers(
+//   "https://gogoanime3.co/yamada-kun-to-lv999-no-koi-wo-suru-episode-13"
+// );
+
+export {
+  get_anime_list,
+  get_anime_info,
+  get_batched_episodes,
+  get_episode,
+  get_servers,
+};
