@@ -1,5 +1,6 @@
 import { useContext, useState } from "react";
 import UserContext from "../../utils/UserContext";
+import { Link, redirect } from "react-router-dom";
 
 const Header = () => {
   const [searched, setSearched] = useState("");
@@ -13,9 +14,11 @@ const Header = () => {
   return (
     <div className="flex border border-black px-10">
       <div className="flex ml-10 py-5 w-9/12">
-        <div className="font-sans text-red-500">
-          <span className="cursor-pointer">AniVerse</span>
-        </div>
+        <Link to={"/"}>
+          <div className="font-sans text-red-500">
+            <span className="cursor-pointer">AniVerse</span>
+          </div>
+        </Link>
         <div className="flex justify-between w-1/5 ml-20 text-lg">
           <div className="cursor-pointer">
             <span>Animes</span>
