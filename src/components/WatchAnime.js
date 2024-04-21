@@ -12,23 +12,13 @@ const WatchAnime = () => {
     get_servers(episode_id).then((res) => {
       console.log(res);
       setServers(res);
-      setEpisodeServer(res[1].url);
+      setEpisodeServer(res[1]?.url);
     });
   }, [episode_id]);
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-8">
-      <div className="w-96 h-48 border border-gray-300 rounded-lg overflow-hidden">
-        {/* <ReactPlayer
-          url={episodeServer}
-          playing={true}
-          controls={true}
-          width="100%"
-          height="100%"
-        /> */}
-        <iframe width="100%" height="100%" src={episodeServer} />
-      </div>
-      <div className="space-y-4">
+    <div className="flex items-start justify-center space-x-8">
+      <div className="flex flex-col space-y-4">
         {servers ? (
           servers.map((server, index) => (
             <div key={index} className="flex items-center space-x-4">
@@ -45,6 +35,16 @@ const WatchAnime = () => {
           ))
         ) : (
           <span className="text-gray-700">No server</span>
+        )}
+      </div>
+      <div className="w-1/2 h-[455px] border border-gray-300 rounded-lg overflow-hidden">
+        {episodeServer && (
+          <iframe
+            src={episodeServer}
+            controls={true}
+            width="100%"
+            height="100%"
+          />
         )}
       </div>
     </div>
